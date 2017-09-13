@@ -4,6 +4,8 @@ import (
 	"os"
 	"time"
 
+	"log/syslog"
+
 	"github.com/labstack/gommon/log"
 	"github.com/lestrrat/go-file-rotatelogs"
 )
@@ -34,4 +36,14 @@ func main() {
 	}
 	log.SetOutput(logf)
 	log.Error("example error message3")
+
+	// msg4(to syslog)
+	log.SetHeader(`{"time":"${time_rfc3339_nano}","level":"${level}","prefix":"${prefix}",` +
+		`"file":"${short_file}","line":"${line}"}`)
+	syslog, err := syslog.New(syslog.LOG_NOTICE|syslog.LOG_USER, "syslog-example")
+	if err != nil {
+		panic(err)
+	}
+	log.SetOutput(syslog)
+	log.Error("exmaple error message4")
 }
