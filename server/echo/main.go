@@ -26,7 +26,11 @@ func main() {
 					return err
 				}
 				c.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body)) // Reset
-				fmt.Println("body", string(body))
+				fmt.Println("body:", string(body))
+
+				fmt.Println("path:", c.Request().RequestURI)
+				fmt.Println("matchedPath:", c.Path())
+				fmt.Println("method:", c.Request().Method)
 
 				err = next(c)
 				return err
@@ -36,6 +40,10 @@ func main() {
 
 	e.GET("/hello", func(c echo.Context) error {
 		return c.String(http.StatusOK, "hello")
+	})
+
+	e.GET("/hello/:id", func(c echo.Context) error {
+		return c.String(http.StatusOK, "hello "+c.Param("id"))
 	})
 
 	e.POST("/echo", func(c echo.Context) error {
