@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 
@@ -34,18 +36,17 @@ func NewRequestValidator(filename string) (RequestValidator, error) {
 }
 
 func (v RequestValidator) Validate(c echo.Context) error {
+	// Retrieve Paramteters from request
 	queryParams := c.QueryParams()
-	//headers := c.Request().Header
-	//b, err := ioutil.ReadAll(c.Request().Body)
-	//if err != nil {
-	//	return err
-	//}
-	//c.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body)) // Reset
-	//body := string(body)
-	//requestPath := c.Request().RequestURI
-	matchedPath := c.Path()
+	b, err := ioutil.ReadAll(c.Request().Body)
+	if err != nil {
+		return err
+	}
+	c.Request().Body = ioutil.NopCloser(bytes.NewBuffer(b)) // Reset
+	matchedPath := c.Path()                                 // TODO: convert :id to {id}
 	method := c.Request().Method
 
+	// create swagger path object
 	path := v.swagger.Paths.Paths[matchedPath]
 	var operation *spec.Operation
 	switch method {
@@ -62,30 +63,51 @@ func (v RequestValidator) Validate(c echo.Context) error {
 		return c.NoContent(http.StatusNotFound)
 	}
 
+	// validate each paramteres
 	ret := validate.Result{}
 	for _, param := range operation.OperationProps.Parameters {
 		switch param.In {
 		case "query":
-			fmt.Println(param.Name, strings.Join(queryParams[param.Name], ","))
 			validator := validate.NewParamValidator(&param, strfmt.Default)
+
+			// TODO: need to convert value from string to expected before validate
 			ret.Merge(validator.Validate(strings.Join(queryParams[param.Name], ",")))
 		case "body":
-		case "header":
+			// TODO: Get schema in a correct way
+			var schema *spec.Schema
+			refURL := param.Schema.Ref.Ref.GetURL()
+			if refURL == nil {
+				schema = param.Schema
+			} else {
+				tmp := v.swagger.Definitions[strings.TrimPrefix(refURL.Fragment, "/definitions/")]
+				schema = &tmp
+			}
+			validator := validate.NewSchemaValidator(schema, nil, "", strfmt.Default)
+
+			switch schema.Type[0] {
+			case "object":
+				var m interface{}
+				if err := json.Unmarshal(b, &m); err != nil {
+					return err
+				}
+
+				ret.Merge(validator.Validate(m))
+			case "string":
+				// TODO
+				//body := string(b)
+			}
+
 		case "path":
+			validator := validate.NewParamValidator(&param, strfmt.Default)
+
+			// TODO: need to convert value from string to expected before validate
+			ret.Merge(validator.Validate(c.Param(param.Name)))
 		}
 	}
 
-	//param := &v.swagger.Paths.Paths["/pets"].Get.OperationProps.Parameters[0]
-	//validator := validate.NewParamValidator(param, strfmt.Default)
-	//
-	//
-	//ret.Merge(validator.Validate(33))
-	//ret.Merge(validator.Validate("aaa"))
-	//
 	if ret.HasErrors() {
 		return ret.AsError()
 	}
-
 	return nil
 }
 
