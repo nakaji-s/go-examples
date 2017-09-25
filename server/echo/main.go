@@ -38,6 +38,9 @@ func main() {
 		},
 	)
 
+	e.Static("/static", "static")
+	e.File("/", "static/index.html")
+
 	e.GET("/hello", func(c echo.Context) error {
 		return c.String(http.StatusOK, "hello")
 	})

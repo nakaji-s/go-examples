@@ -1,0 +1,23 @@
+<!-- x-templateを使ったHTMLパート -->
+<script type="text/x-template" id="todo-item">
+    <span>{{ item.name }}</span>
+</script>
+
+<!-- スクリプトのパート-->
+<script>
+    // テンプレートの追加
+    addTemplate("#todo-item");
+
+    // ここはVueそのまま
+    Vue.component("todoItem", {
+        props: ["item"],
+        template: "#todo-item"
+    })
+</script>
+
+<!-- スタイルシートのパート -->
+<style>
+    span {
+        padding: 10px;
+    }
+</style>

@@ -1,0 +1,30 @@
+<html>
+<head>
+    <script src="static/vue.js"></script>
+
+    <!-- TemplateをDOMに挿入する関数 -->
+    <script>
+        function addTemplate(elm) {
+            var self = document.currentScript.ownerDocument;
+            var template = self.querySelector(elm);
+            document.querySelector("#templates").appendChild(template.cloneNode(true));
+        }
+    </script>
+</head>
+<body>
+<!-- 実際のDOM -->
+<div id="app">
+    <todo-item v-for="val in todos" v-bind:item="val"></todo-item>
+</div>
+
+<!-- Template置き場 -->
+<div id="templates">
+</div>
+
+<!-- Importでロード -->
+<link rel="import" href="static/todoItem.html">
+
+<!-- Vue化 -->
+<script src="static/script.js"></script>
+</body>
+</html>
