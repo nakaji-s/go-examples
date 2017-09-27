@@ -1,6 +1,7 @@
 <html>
 <head>
     <script src="static/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue-router/2.7.0/vue-router.min.js"></script>
 
     <!-- TemplateをDOMに挿入する関数 -->
     <script>
@@ -11,10 +12,19 @@
         }
     </script>
 </head>
+
 <body>
 <!-- 実際のDOM -->
 <div id="app">
-    <todo-item v-for="val in todos" v-bind:item="val"></todo-item>
+    <div>{{message}}</div>
+    <todo-item></todo-item>
+
+    <!-- リンク先を `to` プロパティに指定します -->
+    <!-- デフォルトで <router-link> は `<a>` タグとしてレンダリングされます -->
+    <router-link to="/top">トップページ</router-link>
+    <router-link to="/users">ユーザー一覧ページ</router-link>
+    <router-link to="/todo">todoページ</router-link>
+    <router-view></router-view>
 </div>
 
 <!-- Template置き場 -->
@@ -26,5 +36,6 @@
 
 <!-- Vue化 -->
 <script src="static/script.js"></script>
+
 </body>
 </html>

@@ -1,6 +1,7 @@
 <!-- x-templateを使ったHTMLパート -->
 <script type="text/x-template" id="todo-item">
-    <span>{{ item.name }}</span>
+    <!-- TODO: routerに登録したコンポーネントから見えない -->
+    <div>{{message}}</div>
 </script>
 
 <!-- スクリプトのパート-->
@@ -11,7 +12,12 @@
     // ここはVueそのまま
     Vue.component("todoItem", {
         props: ["item"],
-        template: "#todo-item"
+        template: "#todo-item",
+        data: function() {
+            return {
+                message: 'Hello World from component!'
+            }
+        }
     })
 </script>
 
