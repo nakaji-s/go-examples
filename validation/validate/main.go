@@ -1,18 +1,15 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 
 	"fmt"
 
-	"strings"
-
+	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/spec"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/validate"
 	"github.com/labstack/echo"
 )
 
@@ -35,15 +32,14 @@ func NewRequestValidator(filename string) (RequestValidator, error) {
 	return RequestValidator{&swagger}, nil
 }
 
+func ReadFile(filename string) []byte {
+	data, _ := ioutil.ReadFile(filename)
+	return data
+}
+
 func (v RequestValidator) Validate(c echo.Context) error {
 	// Retrieve Paramteters from request
-	queryParams := c.QueryParams()
-	b, err := ioutil.ReadAll(c.Request().Body)
-	if err != nil {
-		return err
-	}
-	c.Request().Body = ioutil.NopCloser(bytes.NewBuffer(b)) // Reset
-	matchedPath := c.Path()                                 // TODO: convert :id to {id}
+	matchedPath := c.Path() // TODO: convert :id to {id}
 	method := c.Request().Method
 
 	// create swagger path object
@@ -63,51 +59,20 @@ func (v RequestValidator) Validate(c echo.Context) error {
 		return c.NoContent(http.StatusNotFound)
 	}
 
-	// validate each paramteres
-	ret := validate.Result{}
-	for _, param := range operation.OperationProps.Parameters {
-		switch param.In {
-		case "query":
-			validator := validate.NewParamValidator(&param, strfmt.Default)
-
-			// TODO: need to convert value from string to expected before validate
-			ret.Merge(validator.Validate(strings.Join(queryParams[param.Name], ",")))
-		case "body":
-			// TODO: Get schema in a correct way
-			var schema *spec.Schema
-			refURL := param.Schema.Ref.Ref.GetURL()
-			if refURL == nil {
-				schema = param.Schema
-			} else {
-				tmp := v.swagger.Definitions[strings.TrimPrefix(refURL.Fragment, "/definitions/")]
-				schema = &tmp
-			}
-			validator := validate.NewSchemaValidator(schema, nil, "", strfmt.Default)
-
-			switch schema.Type[0] {
-			case "object":
-				var m interface{}
-				if err := json.Unmarshal(b, &m); err != nil {
-					return err
-				}
-
-				ret.Merge(validator.Validate(m))
-			case "string":
-				// TODO
-				//body := string(b)
-			}
-
-		case "path":
-			validator := validate.NewParamValidator(&param, strfmt.Default)
-
-			// TODO: need to convert value from string to expected before validate
-			ret.Merge(validator.Validate(c.Param(param.Name)))
-		}
+	m := map[string]spec.Parameter{}
+	for i, param := range operation.OperationProps.Parameters {
+		m[fmt.Sprintf("A%d", i)] = param
 	}
+	binder := middleware.NewUntypedRequestBinder(m, v.swagger, strfmt.Default)
+	//pretty.Println(m)
 
-	if ret.HasErrors() {
-		return ret.AsError()
+	data := map[string]interface{}{}
+	err := binder.Bind(c.Request(), nil, runtime.JSONConsumer(), &data)
+	if err != nil {
+		return err
 	}
+	fmt.Println(data)
+
 	return nil
 }
 

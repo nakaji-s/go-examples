@@ -36,7 +36,7 @@
             "name": "tags",
             "in": "query",
             "description": "tags to filter by",
-            "required": false,
+            "required": true,
             "type": "array",
             "collectionFormat": "csv",
             "items": {
@@ -48,6 +48,7 @@
             "in": "query",
             "description": "maximum number of results to return",
             "required": false,
+            "default": 3,
             "type": "integer",
             "format": "int32"
           }
