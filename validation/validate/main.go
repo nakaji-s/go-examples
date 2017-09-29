@@ -6,6 +6,8 @@ import (
 
 	"fmt"
 
+	"regexp"
+
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/spec"
@@ -39,7 +41,12 @@ func ReadFile(filename string) []byte {
 
 func (v RequestValidator) Validate(c echo.Context) error {
 	// Retrieve Paramteters from request
-	matchedPath := c.Path() // TODO: convert :id to {id}
+	const sentinel = "/"
+	re := regexp.MustCompile(`:(.+?)/`)
+	matchedPathWithSentinel := re.ReplaceAllString(c.Path()+sentinel, `{$1}/`)
+	matchedPath := matchedPathWithSentinel[:len(matchedPathWithSentinel)-1]
+
+	fmt.Println(c.Path(), matchedPath)
 	method := c.Request().Method
 
 	// create swagger path object
@@ -61,7 +68,7 @@ func (v RequestValidator) Validate(c echo.Context) error {
 
 	m := map[string]spec.Parameter{}
 	for i, param := range operation.OperationProps.Parameters {
-		m[fmt.Sprintf("A%d", i)] = param
+		m[fmt.Sprintf("%d", i)] = param
 	}
 	binder := middleware.NewUntypedRequestBinder(m, v.swagger, strfmt.Default)
 	//pretty.Println(m)
@@ -98,6 +105,10 @@ func main() {
 			}
 		},
 	)
+
+	e.GET("/pets/:id", func(c echo.Context) error {
+		return c.String(http.StatusOK, "pets "+c.Param("id"))
+	})
 
 	e.GET("/hello", func(c echo.Context) error {
 		return c.String(http.StatusOK, "hello")
