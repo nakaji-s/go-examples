@@ -68,7 +68,10 @@ func (v RequestValidator) Validate(c echo.Context) error {
 
 	m := map[string]spec.Parameter{}
 	for i, param := range operation.OperationProps.Parameters {
-		m[fmt.Sprintf("%d", i)] = param
+		// TODO: validate pathParam
+		if param.In != "path" {
+			m[fmt.Sprint(i)] = param
+		}
 	}
 	binder := middleware.NewUntypedRequestBinder(m, v.swagger, strfmt.Default)
 	//pretty.Println(m)
