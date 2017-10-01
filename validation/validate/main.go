@@ -68,16 +68,19 @@ func (v RequestValidator) Validate(c echo.Context) error {
 
 	m := map[string]spec.Parameter{}
 	for i, param := range operation.OperationProps.Parameters {
-		// TODO: validate pathParam
-		if param.In != "path" {
-			m[fmt.Sprint(i)] = param
-		}
+		m[fmt.Sprint(i)] = param
 	}
 	binder := middleware.NewUntypedRequestBinder(m, v.swagger, strfmt.Default)
 	//pretty.Println(m)
 
+	// get PathParams
+	pathParams := middleware.RouteParams{}
+	for _, paramName := range c.ParamNames() {
+		pathParams = append(pathParams, middleware.RouteParam{paramName, c.Param(paramName)})
+	}
+
 	data := map[string]interface{}{}
-	err := binder.Bind(c.Request(), nil, runtime.JSONConsumer(), &data)
+	err := binder.Bind(c.Request(), pathParams, runtime.JSONConsumer(), &data)
 	if err != nil {
 		return err
 	}
