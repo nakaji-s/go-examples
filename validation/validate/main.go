@@ -40,16 +40,14 @@ func ReadFile(filename string) []byte {
 }
 
 func (v RequestValidator) Validate(c echo.Context) error {
-	// Retrieve Paramteters from request
+	// retrieve paramteters from request
 	const sentinel = "/"
 	re := regexp.MustCompile(`:(.+?)/`)
 	matchedPathWithSentinel := re.ReplaceAllString(c.Path()+sentinel, `{$1}/`)
 	matchedPath := matchedPathWithSentinel[:len(matchedPathWithSentinel)-1]
 
-	fmt.Println(c.Path(), matchedPath)
-	method := c.Request().Method
-
 	// create swagger path object
+	method := c.Request().Method
 	path := v.swagger.Paths.Paths[matchedPath]
 	var operation *spec.Operation
 	switch method {
@@ -66,25 +64,27 @@ func (v RequestValidator) Validate(c echo.Context) error {
 		return c.NoContent(http.StatusNotFound)
 	}
 
+	// create requestValidator
 	m := map[string]spec.Parameter{}
 	for i, param := range operation.OperationProps.Parameters {
 		m[fmt.Sprint(i)] = param
 	}
 	binder := middleware.NewUntypedRequestBinder(m, v.swagger, strfmt.Default)
-	//pretty.Println(m)
 
-	// get PathParams
+	// get PathParams from request and set for validate
 	pathParams := middleware.RouteParams{}
 	for _, paramName := range c.ParamNames() {
 		pathParams = append(pathParams, middleware.RouteParam{paramName, c.Param(paramName)})
 	}
 
+	// set Params if default value is needed
 	data := map[string]interface{}{}
+
+	// validate request and set defalut value to data
 	err := binder.Bind(c.Request(), pathParams, runtime.JSONConsumer(), &data)
 	if err != nil {
 		return err
 	}
-	fmt.Println(data)
 
 	return nil
 }
