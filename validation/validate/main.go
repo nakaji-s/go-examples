@@ -8,6 +8,8 @@ import (
 
 	"regexp"
 
+	"strings"
+
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/spec"
@@ -83,7 +85,16 @@ func (v RequestValidator) Validate(c echo.Context) error {
 	// validate request and set defalut value to data
 	err := binder.Bind(c.Request(), pathParams, runtime.JSONConsumer(), &data)
 	if err != nil {
-		return err
+		var out []string
+
+		// filtering error messages
+		strs := strings.Split(err.Error(), "\n")
+		for _, str := range strs {
+			if str != "validation failure list:" {
+				out = append(out, str)
+			}
+		}
+		return fmt.Errorf(strings.Join(out, "\n"))
 	}
 
 	return nil
