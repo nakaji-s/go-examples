@@ -10,11 +10,11 @@ import (
 
 	"strings"
 
-	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/spec"
 	"github.com/go-openapi/strfmt"
 	"github.com/labstack/echo"
+	"github.com/nakaji-s/runtime"
 )
 
 type RequestValidator struct {
