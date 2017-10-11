@@ -8,12 +8,18 @@ import (
 
 	"fmt"
 
+	"math/rand"
+
+	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo-contrib/session"
 )
 
 func main() {
 	// start server
 	e := echo.New()
+
+	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
 
 	// original middleware for dump queryParam,header,body
 	e.Use(
@@ -42,7 +48,18 @@ func main() {
 	e.File("/", "static/index.html")
 
 	e.GET("/hello", func(c echo.Context) error {
-		return c.String(http.StatusOK, "hello")
+		sess, _ := session.Get("session", c)
+		sess.Options = &sessions.Options{
+			Path:     "/",
+			MaxAge:   10,
+			HttpOnly: true,
+		}
+		if _, ok := sess.Values["foo"]; ok == false {
+			sess.Values["foo"] = rand.Int()
+		}
+		sess.Save(c.Request(), c.Response())
+
+		return c.String(http.StatusOK, fmt.Sprint("hello", sess.Values["foo"]))
 	})
 
 	e.GET("/hello/:id", func(c echo.Context) error {
