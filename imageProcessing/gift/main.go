@@ -1,4 +1,4 @@
-package main
+package gift
 
 import (
 	"image"
@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	src := loadImage("testdata/lena.png")
+	src := loadImage("_testdata/lena.png")
 
 	filters := map[string]gift.Filter{
 		"resize":              gift.Resize(100, 0, gift.LanczosResampling),
