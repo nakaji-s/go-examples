@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 func TestHello(t *testing.T) {
 	resp, err := resty.R().Get("http://localhost:8081/hello")
 	assert.Nil(t, err)
-	assert.Equal(t, "hello", string(resp.Body()))
+	assert.Regexp(t, "hello[0-9]*", string(resp.Body()))
 }
 
 func TestHelloId(t *testing.T) {
