@@ -10,9 +10,12 @@ import (
 
 	"math/rand"
 
+	"net/url"
+
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/echo/middleware"
 )
 
 func main() {
@@ -20,6 +23,33 @@ func main() {
 	e := echo.New()
 
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
+
+	// reverse proxy
+	url1, err := url.Parse("http://127.0.0.1:8082")
+	if err != nil {
+		e.Logger.Fatal(err)
+	}
+	e.Group("/blog", middleware.Proxy(
+		&middleware.RoundRobinBalancer{
+			Targets: []*middleware.ProxyTarget{
+				&middleware.ProxyTarget{
+					URL: url1,
+				},
+			},
+		},
+	))
+
+	go func() {
+		e := echo.New()
+		e.POST("/blog/echo", func(c echo.Context) error {
+			body, err := ioutil.ReadAll(c.Request().Body)
+			if err != nil {
+				return err
+			}
+			return c.String(http.StatusOK, string(body))
+		})
+		e.Start("127.0.0.1:8082")
+	}()
 
 	// original middleware for dump queryParam,header,body
 	e.Use(

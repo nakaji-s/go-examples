@@ -40,3 +40,11 @@ func TestEcho(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "hogehoge", string(resp.Body()))
 }
+
+func TestEcho2(t *testing.T) {
+	resp, err := resty.R().
+		SetBody("hogehoge").
+		Post("http://localhost:8081/blog/echo")
+	assert.Nil(t, err)
+	assert.Equal(t, "hogehoge", string(resp.Body()))
+}
