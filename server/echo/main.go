@@ -24,6 +24,15 @@ func main() {
 
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
 
+	// original middleware for add header
+	e.Use(
+		func(next echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+				c.Request().Header.Set("dummy", "dummy")
+				return next(c)
+			}
+		},
+	)
 	// reverse proxy
 	url1, err := url.Parse("http://127.0.0.1:8082")
 	if err != nil {
@@ -39,6 +48,7 @@ func main() {
 		},
 	))
 
+	// second server
 	go func() {
 		e := echo.New()
 		e.POST("/blog/echo", func(c echo.Context) error {
@@ -46,7 +56,7 @@ func main() {
 			if err != nil {
 				return err
 			}
-			return c.String(http.StatusOK, string(body))
+			return c.String(http.StatusOK, string(body)+c.Request().Header.Get("dummy"))
 		})
 		e.Start("127.0.0.1:8082")
 	}()

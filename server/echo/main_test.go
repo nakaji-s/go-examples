@@ -46,5 +46,5 @@ func TestEcho2(t *testing.T) {
 		SetBody("hogehoge").
 		Post("http://localhost:8081/blog/echo")
 	assert.Nil(t, err)
-	assert.Equal(t, "hogehoge", string(resp.Body()))
+	assert.Equal(t, "hogehoge"+"dummy", string(resp.Body()))
 }
