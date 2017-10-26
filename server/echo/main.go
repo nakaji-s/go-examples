@@ -58,6 +58,10 @@ func main() {
 			}
 			return c.String(http.StatusOK, string(body)+c.Request().Header.Get("dummy"))
 		})
+
+		e.GET("/blog/in", func(c echo.Context) error {
+			return c.String(http.StatusOK, "in")
+		})
 		e.Start("127.0.0.1:8082")
 	}()
 
@@ -112,6 +116,14 @@ func main() {
 			return err
 		}
 		return c.String(http.StatusOK, string(body))
+	})
+
+	e.GET("/blog/me", func(c echo.Context) error {
+		return c.String(http.StatusOK, "me")
+	})
+
+	e.GET("/blog/in", func(c echo.Context) error {
+		return c.String(http.StatusOK, "me")
 	})
 
 	e.Logger.Fatal(e.Start("127.0.0.1:8081"))

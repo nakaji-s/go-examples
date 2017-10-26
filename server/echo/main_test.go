@@ -48,3 +48,17 @@ func TestEcho2(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "hogehoge"+"dummy", string(resp.Body()))
 }
+
+func TestMe(t *testing.T) {
+	resp, err := resty.R().
+		Get("http://localhost:8081/blog/me")
+	assert.Nil(t, err)
+	assert.Equal(t, "me", string(resp.Body()))
+}
+
+func TestIn(t *testing.T) {
+	resp, err := resty.R().
+		Get("http://localhost:8081/blog/in")
+	assert.Nil(t, err)
+	assert.Equal(t, "me", string(resp.Body()))
+}
