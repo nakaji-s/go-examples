@@ -2,23 +2,32 @@ package main
 
 import (
 	"strings"
+	"time"
 
 	"fmt"
 
 	"database/sql/driver"
 
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	//_ "github.com/jinzhu/gorm/dialects/postgres"
+	//_ "github.com/jinzhu/gorm/dialects/sqlite"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/kr/pretty"
 )
 
 type Product struct {
-	gorm.Model
+	model Model //`gorm:"ForeignKey:Id;AssociationForeignKey:Refer"`
+	Refer string
 	Code  string
 	Price uint
 	Raw   interface{}   `gorm:"type:varchar(100)"`
 	Str   MyStringArray `gorm:"type:varchar(64)"`
+}
+
+type Model struct {
+	Id        string    `sql:"size:36" gorm:"primary_key;"`
+	CreatedAt time.Time `sql:"DEFAULT:current_timestamp"`
+	UpdatedAt time.Time `sql:"DEFAULT:current_timestamp"`
+	DeletedAt time.Time
 }
 
 type MyStringArray []string
@@ -60,8 +69,8 @@ func beforeCreate(scope *gorm.Scope) {
 }
 
 func main() {
-	db, err := gorm.Open("sqlite3", "test.db")
-	//db, err := gorm.Open("postgres", "host=localhost user=postgres sslmode=disable password=admin")
+	//db, err := gorm.Open("sqlite3", "test.db")
+	db, err := gorm.Open("postgres", "host=localhost user=postgres sslmode=disable password=admin")
 	if err != nil {
 		panic("failed to connect database")
 	}
@@ -71,13 +80,18 @@ func main() {
 	db.Callback().Create().Before("gorm:create").Register("my_plugin:before_create", beforeCreate)
 
 	var product Product
-	db.DropTableIfExists(&product)
+	db.DropTableIfExists(&Product{}, &Model{})
 
 	// Migrate the schema
-	db.AutoMigrate(&Product{})
+	db.AutoMigrate(&Product{}, &Model{})
+	db.Model(&Product{}).AddForeignKey("refer", "models(id)", "RESTRICT", "RESTRICT")
 
 	// Create
-	err = db.Create(&Product{Code: "L1212", Price: 1000, Raw: []string{"aaa", "bbb"}, Str: []string{"aaa", "bbb"}}).Error
+	err = db.Create(&Model{Id: "id001"}).Error
+	if err != nil {
+		panic(err)
+	}
+	err = db.Create(&Product{Code: "L1212", Price: 1000, Raw: []string{"aaa", "bbb"}, Str: []string{"aaa", "bbb"}, Refer: "id001"}).Error
 	if err != nil {
 		panic(err)
 	}
