@@ -68,6 +68,30 @@ func beforeCreate(scope *gorm.Scope) {
 	}
 }
 
+func afterCreate(scope *gorm.Scope) {
+	if scope.DB().Error != nil {
+		num, ok := scope.Get("attempts")
+		if ok == false {
+			num = 0
+		}
+
+		numInt := num.(int)
+		if numInt > 5 {
+			fmt.Println("retry over")
+			return
+		}
+		scope.Set("attempts", numInt+1)
+
+		fmt.Println("this is attempts", numInt)
+
+		scope.DB().Error = nil
+		if err := scope.DB().Exec(scope.SQL, scope.SQLVars).Error; err != nil {
+			scope.DB().Error = err
+			afterCreate(scope)
+		}
+	}
+}
+
 func main() {
 	//db, err := gorm.Open("sqlite3", "test.db")
 	db, err := gorm.Open("postgres", "host=localhost user=postgres sslmode=disable password=admin")
@@ -78,6 +102,7 @@ func main() {
 	db.LogMode(true)
 
 	db.Callback().Create().Before("gorm:create").Register("my_plugin:before_create", beforeCreate)
+	db.Callback().Create().After("gorm:createA").Register("my_plugin:after_create", afterCreate)
 
 	var product Product
 	db.DropTableIfExists(&Product{}, &Model{})
@@ -106,4 +131,9 @@ func main() {
 
 	// Delete - delete product
 	db.Delete(&product)
+
+	err = db.Create(&Model{Id: "id001"}).Error
+	if err != nil {
+		panic(err)
+	}
 }
