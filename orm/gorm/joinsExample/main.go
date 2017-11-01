@@ -96,18 +96,20 @@ func main() {
 	//}
 	//pretty.Println(artists)
 
+	db.LogMode(true)
 	// select artist.id as subquery
 	artists = []Artist{}
 	artistIds := []uint{}
-	db.Find(&artists).Pluck("id", &artistIds)
 	type ArtistMovie struct {
 		ArtistId uint
 		MovieId  uint
 	}
 	artistMovies := []ArtistMovie{}
+	db.Model(&[]Artist{}).Pluck("id", &artistIds).
+		Select("*").Table("artist_movies").Where("artist_id IN (?)", artistIds).Find(&artistMovies)
 	fmt.Println(artistIds)
-	db.Select("*").Table("artist_movies").Where("artist_id IN (?)", artistIds).Find(&artistMovies)
 	pretty.Println(artistMovies)
+	db.LogMode(false)
 
 	//
 	//// Get the list the artists for movie "Nayagan"
