@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 
+	"fmt"
+
 	"github.com/jinzhu/gorm"
 	"github.com/kr/pretty"
 	_ "github.com/lib/pq"
@@ -78,21 +80,41 @@ func main() {
 
 	db.DropTableIfExists(new(Language), new(Movie), new(Artist))
 	db.AutoMigrate(new(Language), new(Movie), new(Artist))
+	db.LogMode(true)
 
 	createArtists()
 
 	// Get the list of all artist who acted in "english" movies
 	var artists []Artist
-	if err = db.Joins("JOIN artist_movies on artist_movies.artist_id=artists.id").
-		Joins("JOIN movies on movies.id=artist_movies.movie_id").
-		Joins("JOIN languages on movies.language_id=languages.id").
-		Where("languages.name=?", "tamil").
-		Group("artists.id").
-		Preload("Movies").
-		Find(&artists).Error; err != nil {
-		log.Fatal(err)
+	//if err = db.Joins("JOIN artist_movies on artist_movies.artist_id=artists.id").
+	//	Joins("JOIN movies on movies.id=artist_movies.movie_id").
+	//	Joins("JOIN languages on movies.language_id=languages.id").
+	//	Where("languages.name=?", "tamil").
+	//	Group("artists.id").
+	//	Preload("Movies").
+	//	Find(&artists).Error; err != nil {
+	//	log.Fatal(err)
+	//}
+	//pretty.Println(artists)
+
+	artists = []Artist{}
+	artistIds := []uint{}
+	rows, _ := db.Model(&Artist{}).Rows()
+	for rows.Next() {
+		artist := Artist{}
+		db.ScanRows(rows, &artist)
+		artistIds = append(artistIds, artist.ID)
 	}
-	pretty.Println(artists)
+	rows.Close()
+	type ArtistMovie struct {
+		ArtistId uint
+		MovieId  uint
+	}
+	artistMovies := []ArtistMovie{}
+	fmt.Println(artistIds)
+	db.Select("*").Table("artist_movies").Where("artist_id IN (?)", artistIds).Find(&artistMovies)
+	pretty.Println(artistMovies)
+
 	//
 	//// Get the list the artists for movie "Nayagan"
 	//artists = []Artist{}
