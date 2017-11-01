@@ -80,7 +80,6 @@ func main() {
 
 	db.DropTableIfExists(new(Language), new(Movie), new(Artist))
 	db.AutoMigrate(new(Language), new(Movie), new(Artist))
-	db.LogMode(true)
 
 	createArtists()
 
@@ -97,15 +96,10 @@ func main() {
 	//}
 	//pretty.Println(artists)
 
+	// select artist.id as subquery
 	artists = []Artist{}
 	artistIds := []uint{}
-	rows, _ := db.Model(&Artist{}).Rows()
-	for rows.Next() {
-		artist := Artist{}
-		db.ScanRows(rows, &artist)
-		artistIds = append(artistIds, artist.ID)
-	}
-	rows.Close()
+	db.Find(&artists).Pluck("id", &artistIds)
 	type ArtistMovie struct {
 		ArtistId uint
 		MovieId  uint
