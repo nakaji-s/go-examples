@@ -96,6 +96,22 @@ func main() {
 	//}
 	//pretty.Println(artists)
 
+	// association
+	var movies []Movie
+	artist := Artist{ID: 1}
+	db.Model(&artist).Association("Movies").Find(&movies)
+	pretty.Println(movies)
+
+	// association with preload
+	db.LogMode(false)
+	db.Preload("Movies").
+		//Preload("Movies", func(db *gorm.DB) *gorm.DB {
+		//	return db.Limit(3)
+		//}).
+		Find(&artists)
+	pretty.Println(artists)
+	db.LogMode(false)
+
 	db.LogMode(true)
 	// select artist.id as subquery
 	artists = []Artist{}
