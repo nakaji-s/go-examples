@@ -3,8 +3,6 @@ package main
 import (
 	"log"
 
-	"fmt"
-
 	"github.com/jinzhu/gorm"
 	"github.com/kr/pretty"
 	_ "github.com/lib/pq"
@@ -112,19 +110,37 @@ func main() {
 	pretty.Println(artists)
 	db.LogMode(false)
 
-	db.LogMode(true)
 	// select artist.id as subquery
+	db.LogMode(true)
 	artists = []Artist{}
 	artistIds := []uint{}
 	type ArtistMovie struct {
 		ArtistId uint
 		MovieId  uint
 	}
-	artistMovies := []ArtistMovie{}
-	db.Model(&[]Artist{}).Pluck("id", &artistIds).
-		Select("*").Table("artist_movies").Where("artist_id IN (?)", artistIds).Find(&artistMovies)
-	fmt.Println(artistIds)
-	pretty.Println(artistMovies)
+	rows, err := db.Model(&[]Artist{}).Select("*").
+		Find(&artists).
+		Pluck("id", &artistIds).
+		Model(&[]Movie{}).
+		Joins("JOIN artist_movies on movies.id=artist_movies.movie_id").
+		Rows()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	i := 0
+	for rows.Next() {
+		artistMovie := ArtistMovie{}
+		movie := Movie{}
+		db.ScanRows(rows, &artistMovie)
+		db.ScanRows(rows, &movie)
+		if artists[i].ID != artistMovie.ArtistId {
+			i++
+		}
+		artists[i].Movies = append(artists[i].Movies, movie)
+	}
+	pretty.Println(artists)
 	db.LogMode(false)
 
 	//
