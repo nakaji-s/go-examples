@@ -1,9 +1,10 @@
 package main
 
 import (
+	"unicode/utf8"
+
 	"github.com/mattn/go-runewidth"
 	"github.com/nsf/termbox-go"
-	"unicode/utf8"
 )
 
 func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {

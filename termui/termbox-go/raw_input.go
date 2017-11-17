@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/nsf/termbox-go"
 	"strings"
+
+	"github.com/nsf/termbox-go"
 )
 
 func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {
