@@ -37,11 +37,31 @@ func main() {
 	//######################
 	// NG
 	// INSERT INTO "products" ("id","description") VALUES ('id001','')
-	db.Create(&Product{Id: id001, Description: emptyString})
+	//db.Create(&Product{Id: id001, Description: emptyString})
 
 	// INSERT INTO "products" ("id","description") VALUES ('id001',NULL)
 	db.Table("products").Create(&ProductPtr{Id: &id001})
 
 	// INSERT INTO "products" ("id") VALUES ('id001')
 	db.Table("products").Create(&ProductNullTag{Id: id001, Description: emptyString})
+
+	//######################
+	// Update Patterns
+	//######################
+	// UPDATE "products" SET "id" = 'id001'  WHERE "products"."id" = 'id001'
+	db.Model(&Product{}).Update(&Product{Id: id001, Description: emptyString})
+
+	// UPDATE "products" SET "description" = 'test', "id" = 'id001'  WHERE "products"."id" = 'id001'
+	db.Model(&Product{}).Update(&Product{Id: id001, Description: "test"})
+
+	// UPDATE "products" SET "id" = 'id001', "description" = ''  WHERE "products"."id" = 'id001'
+	db.Model(&Product{}).Update(map[string]interface{}{"id": id001, "description": emptyString})
+
+	// UPDATE "products" SET "description" = ''  WHERE "products"."id" = 'id001'
+	db.Model(&Product{}).Save(&Product{Id: id001, Description: emptyString})
+
+	// NG
+	// UPDATE "products" SET "id" = '', "description" = ''
+	//db.Model(&Product{}).Update(&ProductPtr{Id: &id001, Description: &emptyString})
+
 }
