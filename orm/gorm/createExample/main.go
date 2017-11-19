@@ -64,4 +64,24 @@ func main() {
 	// UPDATE "products" SET "id" = '', "description" = ''
 	//db.Model(&Product{}).Update(&ProductPtr{Id: &id001, Description: &emptyString})
 
+	//######################
+	// Update Null Patterns
+	//######################
+	// UPDATE "products" SET "id" = 'id001', "description" = NULL  WHERE "products"."id" = 'id001'
+	db.Model(&Product{}).Update(map[string]interface{}{"id": id001, "description": gorm.Expr("NULL")})
+
+	// UPDATE "products" SET "description" = NULL  WHERE (id = 'id001')
+	db.Model(&Product{}).Where("id = ?", id001).Update("description", gorm.Expr("NULL"))
+
+	// UPDATE "products" SET "description" = NULL  WHERE "products"."id" = 'id001'
+	db.Table("products").Save(&ProductPtr{Id: &id001, Description: nil})
+
+	// NG
+	// UPDATE "products" SET "id" = 'id001'  WHERE (id = 'id001')
+	//db.Table("products").Where("id = ?", id001).Update(&ProductPtr{Id: &id001, Description: nil})
+
+	// NG
+	// UPDATE "products" SET "description" = ''  WHERE "products"."id" = 'id001'
+	//db.Table("products").Save(&ProductNullTag{Id: id001, Description: emptyString})
+
 }
