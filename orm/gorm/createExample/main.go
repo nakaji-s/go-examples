@@ -1,7 +1,10 @@
 package main
 
 import "github.com/jinzhu/gorm"
-import _ "github.com/jinzhu/gorm/dialects/sqlite"
+import (
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/kr/pretty"
+)
 
 type Product struct {
 	Id          string
@@ -84,4 +87,22 @@ func main() {
 	// UPDATE "products" SET "description" = ''  WHERE "products"."id" = 'id001'
 	//db.Table("products").Save(&ProductNullTag{Id: id001, Description: emptyString})
 
+	//######################
+	// Get Patterns
+	//######################
+	product := Product{}
+	productPtr := ProductPtr{}
+
+	// SELECT * FROM "products"   ORDER BY "products"."id" ASC LIMIT 1
+	// main.Product{Id:"id001", Description:""}
+	db.First(&product)
+	pretty.Println(product)
+
+	// SELECT * FROM "products"   ORDER BY "products"."id" ASC LIMIT 1
+	//main.ProductPtr{
+	//	Id:          &"id001",
+	//	Description: (*string)(nil),
+	//}
+	db.Table("products").First(&productPtr)
+	pretty.Println(productPtr)
 }
